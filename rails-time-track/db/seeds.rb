@@ -3,41 +3,41 @@ require 'faker'
 #Create users
 
   owner = User.create(
-    name: "Diego",
-    email: "diegotc86@gmail.com",
+    name: "Pepe",
+    email: "pepe@quipu.com",
     password: "123456",
     role: "Owner",
     rate: 6200
   )
   
   manager1 = User.create(
-    name: "Brayan",
-    email: "linzeur@hotmail.com",
+    name: "Gustavo",
+    email: "gustavo@quipu.com",
     password: "123456",
-    role: "Manager",
+    role: "Analyst",
     rate: 4300
   )
 
   manager2 = User.create(
-    name: "Frank",
-    email: "manager2@mail.com",
+    name: "Carla",
+    email: "carla@quipu.com",
     password: "123456",
-    role: "Manager",
+    role: "Analyst",
     rate: 4500,
     isActive: false
   )
   
   analyst1 = User.create(
-    name: "Jonathan",
-    email: "jcmendozar10@gmail.com",
+    name: "Mariana",
+    email: "mariana@quipu.com",
     password: "123456",
     role: "Analyst",
     rate: 1200
   )
 
   analyst2 = User.create(
-    name: "Lian",
-    email: "analyst2@mail.com",
+    name: "Renato",
+    email: "renato@quipu.com",
     password: "123456",
     role: "Analyst",
     rate: 1100
@@ -45,7 +45,7 @@ require 'faker'
 
   analyst3 = User.create(
     name: "Carlos",
-    email: "analyst3@mail.com",
+    email: "carlos@quipu.com",
     password: "123456",
     role: "Analyst",
     rate: 1150
@@ -53,7 +53,7 @@ require 'faker'
 
   analyst4 = User.create(
     name: "Carmen",
-    email: "analyst4@mail.com",
+    email: "carmen@quipu.com",
     password: "123456",
     role: "Analyst",
     rate: 1300,
@@ -78,7 +78,7 @@ require 'faker'
     client: "Interbank Group",
     category: "Category 2",
     start_date: "2019-07-08",
-    end_date: "2019-08-19",
+    end_date: "2019-08-05",
     closed: false,
     estimated_cost: 1017600,
     real_cost: 0
@@ -118,7 +118,7 @@ require 'faker'
   )
 
   closed_project1 = Project.create(
-    name: "Proyecto Cerrado 1",
+    name: "Telecom",
     client: "BID",
     category: "Category 2",
     start_date: "2019-05-13",
@@ -129,13 +129,35 @@ require 'faker'
   )
 
   closed_project2 = Project.create(
-    name: "Proyecto Cerrado 2",
+    name: "Asesoría de Compra de Licencias",
     client: "Ministerio Produccion",
     category: "Category 3",
     start_date: "2019-05-13",
     end_date: "2019-07-07",
     closed: true,
     estimated_cost: 940800,
+    real_cost: 0
+  )
+
+  closed_project3 = Project.create(
+    name: "Tramite Documentario Online",
+    client: "Ministerio Produccion",
+    category: "Category 3",
+    start_date: "2019-04-01",
+    end_date: "2019-05-10",
+    closed: true,
+    estimated_cost: 801600,
+    real_cost: 0
+  )
+
+  closed_project4 = Project.create(
+    name: "Capacitación SAP",
+    client: "Ministerio Produccion",
+    category: "Category 3",
+    start_date: "2019-04-19",
+    end_date: "2019-05-03",
+    closed: true,
+    estimated_cost: 510400,
     real_cost: 0
   )
 
@@ -328,6 +350,41 @@ require 'faker'
     real_cost: 0
   )
 
+  projectMember8_1 = ProjectMember.create(
+    user:owner,
+    project:closed_project3,
+    estimated_cost: 297600,
+    real_cost: 0
+  )
+
+  projectMember8_2 = ProjectMember.create(
+    user:manager2,
+    project:closed_project3,
+    estimated_cost: 504000,
+    real_cost: 0
+  )
+
+  projectMember9_1 = ProjectMember.create(
+    user:owner,
+    project:closed_project4,
+    estimated_cost: 198400,
+    real_cost: 0
+  )
+
+  projectMember9_2 = ProjectMember.create(
+    user:manager2,
+    project:closed_project4,
+    estimated_cost: 216000,
+    real_cost: 0
+  )
+
+  projectMember9_3 = ProjectMember.create(
+    user:analyst1,
+    project:closed_project4,
+    estimated_cost: 96000,
+    real_cost: 0
+  )
+
   (Project.where(closed: false).each{|project| 
     start = Date.parse(project.start_date.to_s)
     finish = Date.parse(project.end_date.to_s)
@@ -354,17 +411,31 @@ require 'faker'
     duration = 0
     (start..finish).each{|day| duration += 1 if (![6,7].include?(day.cwday))}
     
-    project.project_members.each{|member|
-      (start..finish).each { |day| 
-        if ![6,7].include?(day.cwday)
-          DailyLog.create(
-            project_member: member,
-            date: day.to_s,
-            amount: (member.estimated_cost / duration * rand(0..1.85)).to_i
-          )
-        end
+    if project.id != closed_project3.id && project.id != closed_project2.id
+      project.project_members.each{|member|
+        (start..finish).each { |day| 
+          if ![6,7].include?(day.cwday)
+            DailyLog.create(
+              project_member: member,
+              date: day.to_s,
+              amount: (member.estimated_cost / duration * rand(0..0.9)).to_i
+            )
+          end
+        }
       }
-    }
+    else
+      project.project_members.each{|member|
+        (start..finish).each { |day| 
+          if ![6,7].include?(day.cwday)
+            DailyLog.create(
+              project_member: member,
+              date: day.to_s,
+              amount: (member.estimated_cost / duration * rand(0.9..1.85)).to_i
+            )
+          end
+        }
+      }
+    end
   })
 
   Project.all.each{|project| 
