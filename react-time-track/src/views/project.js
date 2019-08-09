@@ -79,12 +79,14 @@ function Project({ project_id }) {
     const weeksLabels = weeklyData.map(week_data => week_data.week);
     const estimated_cost = weeklyData.map(week_data => {
       acumEstimated += week_data.estimated_cost;
-      return (acumEstimated / project.estimated_cost) * 100;
+      return (
+        Math.round((acumEstimated / project.estimated_cost) * 100 * 100) / 100
+      );
     });
 
     const real_cost = weeklyData.map(week_data => {
       acumReal += week_data.real_cost;
-      return (acumReal / project.estimated_cost) * 100;
+      return Math.round((acumReal / project.estimated_cost) * 100 * 100) / 100;
     });
 
     const myChart = progressChart("myChart", weeksLabels, {

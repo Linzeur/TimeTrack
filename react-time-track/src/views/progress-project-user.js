@@ -51,11 +51,16 @@ function ProgressProjectByUser({ project_id, member_id }) {
     const weeksLabels = weeklyData.details.map(week_data => week_data.week);
     const estimated_cost = weeklyData.details.map(week_data => {
       acumEstimated += week_data.estimated_cost;
-      return (acumEstimated / weeklyData.estimated_cost) * 100;
+      return (
+        Math.round((acumEstimated / weeklyData.estimated_cost) * 100 * 100) /
+        100
+      );
     });
     const real_cost = weeklyData.details.map(week_data => {
       acumReal += week_data.real_cost;
-      return (acumReal / weeklyData.estimated_cost) * 100;
+      return (
+        Math.round((acumReal / weeklyData.estimated_cost) * 100 * 100) / 100
+      );
     });
 
     const myChart = progressChart("myChart", weeksLabels, {

@@ -77,8 +77,8 @@ require 'faker'
     name: "Line Balancing",
     client: "Interbank Group",
     category: "Category 2",
-    start_date: "2019-07-08",
-    end_date: "2019-08-05",
+    start_date: "2019-07-22",
+    end_date: "2019-08-19",
     closed: false,
     estimated_cost: 1017600,
     real_cost: 0
@@ -389,8 +389,8 @@ require 'faker'
     start = Date.parse(project.start_date.to_s)
     finish = Date.parse(project.end_date.to_s)
     yesterday = Date.today.prev_day
-    duration = 0
-    (start..finish).each{|day| duration += 1 if (![6,7].include?(day.cwday))}
+    duration = (start..finish).filter {|d| (1..5).include?(d.wday) }.size
+    # (start..finish).each{|day| duration += 1 if (![6,7].include?(day.cwday))}
     
     project.project_members.each{|member|
       (start..yesterday).each { |day| 
@@ -398,7 +398,7 @@ require 'faker'
           DailyLog.create(
             project_member: member,
             date: day.to_s,
-            amount: (member.estimated_cost / duration * rand(0..1.85)).to_i
+            amount: ((member.estimated_cost / duration) * rand(0.25..1.75)).to_i
           )
         end
       }
@@ -408,8 +408,8 @@ require 'faker'
   (Project.where(closed: true).each{|project| 
     start = Date.parse(project.start_date.to_s)
     finish = Date.parse(project.end_date.to_s)
-    duration = 0
-    (start..finish).each{|day| duration += 1 if (![6,7].include?(day.cwday))}
+    duration = (start..finish).filter {|d| (1..5).include?(d.wday) }.size
+    # (start..finish).each{|day| duration += 1 if (![6,7].include?(day.cwday))}
     
     if project.id != closed_project3.id && project.id != closed_project2.id
       project.project_members.each{|member|
@@ -441,18 +441,27 @@ require 'faker'
   Project.all.each{|project| 
     s = Date.parse(project.start_date.to_s)
     e = Date.parse(project.end_date.to_s)
-    duration = (e - s).to_i / 7
+    duration = (s..e).filter {|d| (1..5).include?(d.wday) }.size
+    estimated_cost_daily = project.estimated_cost / duration
+    weeks_estimated_cost = {}
+    (s..e).each{|day|
+      if (1..5).include?(day.wday)
+        weeks_estimated_cost[day.cweek] ||= 0
+        weeks_estimated_cost[day.cweek] = weeks_estimated_cost[day.cweek] + estimated_cost_daily
+      end
+    }
+
     weeks = {}
     project.daily_logs.each {|log|
       weeks[log.date.cweek] ||= 0
-      weeks[log.date.cweek] = (weeks[log.date.cweek] + log.amount)
+      weeks[log.date.cweek] = weeks[log.date.cweek] + log.amount
     }
 
     weeks.each {|key, value|
       WeeklyProjectReport.create(
         project: project,
         week: key,
-        estimated_cost: project.estimated_cost / duration,
+        estimated_cost: weeks_estimated_cost[key],
         real_cost: value
       )
     }
@@ -475,8 +484,19 @@ require 'faker'
   Project.all.each{|project| 
     s = Date.parse(project.start_date.to_s)
     e = Date.parse(project.end_date.to_s)
-    duration = (e - s).to_i / 7
+    # duration = (e - s).to_i / 7
+    duration = (s..e).filter {|d| (1..5).include?(d.wday) }.size
+
     project.project_members.each{|project_member|
+      estimated_cost_daily = project_member.estimated_cost / duration
+      weeks_estimated_cost = {}
+      (s..e).each{|day|
+        if (1..5).include?(day.wday)
+          weeks_estimated_cost[day.cweek] ||= 0
+          weeks_estimated_cost[day.cweek] = weeks_estimated_cost[day.cweek] + estimated_cost_daily
+        end
+      }
+
       weeks = {}
       project_member.daily_logs.each {|log|
         weeks[log.date.cweek] ||= 0
@@ -487,7 +507,7 @@ require 'faker'
         UserProjectReport.create(
           project_member: project_member,
           week: key,
-          estimated_cost: project_member.estimated_cost / duration,
+          estimated_cost: weeks_estimated_cost[key],
           real_cost: value
         )
       }
